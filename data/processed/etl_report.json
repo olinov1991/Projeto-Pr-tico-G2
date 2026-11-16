@@ -1,0 +1,35 @@
+{
+  "linhas_brutas": 58634,
+  "nulos_brutos": {
+    "CIRCOBITO": 2028,
+    "DTNASC": 227,
+    "SEXO": 15,
+    "RACACOR": 1336,
+    "ESTCIV": 4329,
+    "ESC": 13472,
+    "LOCOCOR": 171,
+    "ASSISTMED": 17762,
+    "CAUSABAS_O": 90,
+    "idade": 227
+  },
+  "nascimentos_corrigidos_seculo": 21473,
+  "datas_obito_invalidas": 0,
+  "linhas_data_inconsistente_com_ano_mes": 0,
+  "idades_fora_de_0_110_viraram_na": 2,
+  "local_ocorrencia_codigo_6_invalido": 24,
+  "ocupacao_zero_sem_informacao": 12353,
+  "nulos_antes_do_preenchimento": {
+    "circunstancia_obito": 2028,
+    "sexo": 15,
+    "raca_cor": 1336,
+    "estado_civil": 4329,
+    "escolaridade": 13472,
+    "local_ocorrencia": 195,
+    "assistencia_medica": 17762,
+    "ocupacao": 12353
+  },
+  "uf_sem_regiao": 0,
+  "linhas_lesao_autoprovocada_x60_x84": 58492,
+  "linhas_fora_de_x60_x84": 142,
+  "linhas_processadas": 58634
+}

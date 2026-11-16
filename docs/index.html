@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Óbitos por lesão autoprovocada no Brasil, 2014 a 2018: uma análise exploratória dos dados do SIM/DataSUS</title>
+<meta name="description" content="Artigo acadêmico com análise exploratória dos óbitos por lesão autoprovocada no Brasil entre 2014 e 2018, usando Python e dados abertos do SIM/DataSUS.">
+<meta name="keywords" content="análise de dados, saúde pública, mortalidade, DataSUS, Python, ciência aberta">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fafbfc;
+  --ink: #17222d;
+  --muted: #5a6978;
+  --rule: #d3dbe2;
+  --accent: #1d5e7e;
+  --accent-ink: #ffffff;
+  --code-bg: #eef2f5;
+  --placeholder: #fff6d6;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12181e; --ink: #e4eaf0; --muted: #9aa8b6; --rule: #2c3743;
+    --accent: #7fb8d6; --accent-ink: #0d1218; --code-bg: #1b242d; --placeholder: #3a3320;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12181e; --ink: #e4eaf0; --muted: #9aa8b6; --rule: #2c3743;
+  --accent: #7fb8d6; --accent-ink: #0d1218; --code-bg: #1b242d; --placeholder: #3a3320;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 1rem; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--serif); font-size: 1.125rem; line-height: 1.7;
+}
+a { color: var(--accent); text-underline-offset: 0.18em; }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+.layout { max-width: 74rem; margin: 0 auto; padding: 0 1.25rem 4rem; display: block; }
+@media (min-width: 70rem) {
+  .layout { display: grid; grid-template-columns: 14rem minmax(0, 42rem); gap: 4rem; }
+}
+nav.toc { font-family: var(--sans); font-size: 0.9rem; padding-top: 3rem; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; position: sticky; top: 2rem; border-left: 2px solid var(--rule); }
+nav.toc a { display: block; padding: 0.3rem 0 0.3rem 1rem; color: var(--muted); text-decoration: none; }
+nav.toc a:hover { color: var(--accent); }
+@media (max-width: 69.99rem) {
+  nav.toc { padding-top: 0; margin-bottom: 2rem; }
+  nav.toc ol { position: static; display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; border: 0; }
+  nav.toc a { padding: 0; }
+}
+
+header.titulo { grid-column: 1 / -1; padding: 3.5rem 0 2rem; border-bottom: 1px solid var(--rule); margin-bottom: 2rem; }
+header.titulo h1 {
+  font-family: var(--sans); font-weight: 700; font-size: clamp(1.7rem, 4.2vw, 2.6rem);
+  line-height: 1.15; letter-spacing: -0.015em; margin: 0 0 1.25rem; max-width: 24em; text-wrap: balance;
+}
+.autores { font-family: var(--sans); font-size: 1rem; margin: 0; }
+.filiacao { font-family: var(--sans); font-size: 0.92rem; color: var(--muted); margin: 0.25rem 0 1.25rem; }
+.acoes { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+.btn {
+  font-family: var(--sans); font-size: 0.9rem; font-weight: 600; text-decoration: none;
+  background: var(--accent); color: var(--accent-ink); padding: 0.5rem 0.95rem; border-radius: 4px;
+}
+.badge {
+  font-family: var(--sans); font-size: 0.8rem; color: var(--muted);
+  border: 1px solid var(--rule); padding: 0.2rem 0.6rem; border-radius: 99px;
+}
+
+main h2 { font-family: var(--sans); font-size: 1.45rem; line-height: 1.25; margin: 3rem 0 0.75rem; }
+main h3 { font-family: var(--sans); font-size: 1.1rem; margin: 2rem 0 0.5rem; }
+main p { margin: 0 0 1rem; hyphens: auto; }
+.resumo { border-left: 4px solid var(--accent); padding: 0.25rem 0 0.25rem 1.25rem; margin: 0 0 2rem; }
+.resumo h2 { margin-top: 0; font-size: 1.2rem; }
+.resumo .kw { font-size: 0.95rem; color: var(--muted); margin: 0; }
+.pendente { background: var(--placeholder); padding: 0.05em 0.3em; border-radius: 3px; font-family: var(--sans); font-size: 0.92em; }
+
+ol.rqs { padding-left: 1.4rem; }
+ol.rqs li { margin-bottom: 0.4rem; }
+pre {
+  background: var(--code-bg); font-family: var(--mono); font-size: 0.82rem; line-height: 1.55;
+  padding: 1rem 1.1rem; border-radius: 6px; overflow-x: auto; margin: 0 0 1.25rem; max-width: 100%;
+}
+code { font-family: var(--mono); font-size: 0.88em; background: var(--code-bg); padding: 0.1em 0.35em; border-radius: 3px; }
+pre code { background: none; padding: 0; font-size: inherit; }
+
+figure { margin: 1.75rem 0; }
+figure .quadro { border: 1px solid var(--rule); border-radius: 6px; padding: 0.75rem; min-height: 18rem; background: var(--bg); }
+figure .vazio {
+  display: grid; place-items: center; text-align: center; min-height: 14rem; color: var(--muted);
+  font-family: var(--sans); font-size: 0.92rem; padding: 1rem;
+}
+figcaption { font-family: var(--sans); font-size: 0.88rem; color: var(--muted); margin-top: 0.6rem; }
+figcaption strong { color: var(--ink); }
+.tabela { overflow-x: auto; margin: 0 0 1.25rem; }
+table { border-collapse: collapse; font-family: var(--sans); font-size: 0.92rem; width: 100%; }
+th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--rule); }
+th { font-weight: 600; }
+
+.referencias { font-size: 1rem; }
+.referencias p { padding-left: 1.5rem; text-indent: -1.5rem; }
+.aviso { font-family: var(--sans); font-size: 0.92rem; border: 1px solid var(--rule); border-radius: 6px; padding: 0.9rem 1rem; margin-top: 2.5rem; color: var(--muted); }
+footer { grid-column: 1 / -1; border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1.25rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); }
+
+figure .quadro.img { background: #ffffff; padding: 0.5rem; min-height: 0; }
+figure img { display: block; width: 100%; height: auto; }
+figure iframe { display: block; width: 100%; height: 26rem; border: 0; background: #ffffff; border-radius: 4px; }
+figure .quadro:has(iframe) { padding: 0; background: #ffffff; min-height: 0; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<header class="titulo">
+  <h1>Óbitos por lesão autoprovocada no Brasil, 2014 a 2018: uma análise exploratória dos dados do SIM/DataSUS</h1>
+  <p class="autores">Leandro Parreira Novarino</p>
+  <p class="filiacao">UNILASALLE, Bacharelado em Sistemas de Informação, 6º período. Disciplina: Linguagem de Programação (Análise e Visualização de Dados com Python), 6 semestre do ano de 2026.</p>
+  <div class="acoes">
+    <a class="btn" href="https://github.com/[USUARIO]/[REPOSITORIO]">Ver repositório no GitHub</a>
+    <span class="badge">Python 3.12</span>
+    <span class="badge">Código MIT</span>
+    <span class="badge">Dados e texto CC-BY 4.0</span>
+    <span class="badge">FAIR</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Seções do artigo">
+  <ol>
+    <li><a href="#resumo">Resumo</a></li>
+    <li><a href="#introducao">1. Introdução</a></li>
+    <li><a href="#metodologia">2. Metodologia</a></li>
+    <li><a href="#resultados">3. Resultados e discussão</a></li>
+    <li><a href="#conclusao">4. Conclusão</a></li>
+    <li><a href="#fair">5. Disponibilidade dos dados</a></li>
+    <li><a href="#referencias">6. Referências</a></li>
+  </ol>
+</nav>
+
+<main>
+  <section class="resumo" id="resumo" aria-labelledby="h-resumo">
+    <h2 id="h-resumo">Resumo</h2>
+    <p>As lesões autoprovocadas são um tema prioritário de saúde pública, e seu monitoramento depende de dados de boa qualidade. Este trabalho analisa 58.492 óbitos registrados no Sistema de Informações sobre Mortalidade (SIM/DataSUS) entre 2014 e 2018, classificados nas causas básicas X60 a X84 da CID-10, a partir de uma base pública do Kaggle. Com um pipeline reproduzível em Python (pandas, Matplotlib e Plotly), tratamos inconsistências de datas e categorias sem descartar registros e conduzimos uma análise exploratória guiada por três perguntas: evolução temporal e geográfica, perfil das vítimas, e sazonalidade e local de ocorrência. Os óbitos passaram de 10.653 em 2014 para 12.733 em 2018 (+19,5%), com maior crescimento relativo na região Norte (+40,0%) e menor no Sudeste (+9,2%). Homens correspondem a 78,8% dos óbitos com sexo informado, e pessoas de 20 a 49 anos concentram cerca de 59% dos registros. O domicílio foi o local de 61,8% das ocorrências informadas, e o índice sazonal variou de 0,91 (julho) a 1,07 (dezembro). Como a base traz apenas contagens, sem população de referência, os resultados descrevem a composição dos óbitos e não o risco relativo de cada grupo. Código, dados tratados e documentação estão disponíveis em repositório aberto.</p>
+    <p class="kw"><strong>Palavras-chave:</strong> análise de dados; saúde pública; mortalidade; DataSUS; Python; ciência aberta.</p>
+  </section>
+
+  <section id="introducao">
+    <h2>1. Introdução</h2>
+    <p>A morte por lesão autoprovocada é um tema prioritário de saúde pública, e as políticas de prevenção dependem de informação confiável sobre quem morre, onde e quando. </p>
+    <p>No Brasil, a principal fonte de informação sobre óbitos é o Sistema de Informações sobre Mortalidade (SIM), mantido pelo Ministério da Saúde e alimentado pelas declarações de óbito. Seus microdados são públicos, o que permite análises reprodutíveis por qualquer pessoa, mas exigem cuidado com a qualidade do preenchimento e com a interpretação de contagens sem população de referência.</p>
+    <p>Este estudo faz uma análise exploratória dos óbitos por lesão autoprovocada registrados no SIM entre 2014 e 2018 e documenta o processo de tratamento dos dados de forma aberta e reproduzível. Ele responde às seguintes perguntas de pesquisa:</p>
+    <ol class="rqs">
+      <li><strong>RQ1:</strong> como evoluíram os óbitos por ano, região e unidade da federação (UF)?</li>
+      <li><strong>RQ2:</strong> qual o perfil dos óbitos por sexo, faixa etária, escolaridade, raça/cor e estado civil?</li>
+      <li><strong>RQ3:</strong> há padrão sazonal ou diferenças por local de ocorrência e meio utilizado?</li>
+    </ol>
+  </section>
+
+  <section id="metodologia">
+    <h2>2. Metodologia e pipeline de dados</h2>
+    <h3>2.1 Fonte e granularidade</h3>
+    <p>Os dados vêm do conjunto <em>Dados de suicídio no Brasil, 2014 a 2018</em>, publicado no Kaggle e originado do SIM/DataSUS (Ministério da Saúde). Cada linha é um óbito, com 17 variáveis sobre local, data, perfil da pessoa e causa básica (CID-10). A base não traz denominadores populacionais.</p>
+    <h3>2.2 Tratamento</h3>
+    <p>O arquivo bruto está em <code>latin-1</code> e foi lido com <code>pandas</code>. Nenhuma linha foi descartada: inconsistências viraram valores ausentes ou receberam <em>flags</em>, e cada correção foi contada em um relatório (<code>etl_report.json</code>). Os principais passos foram:</p>
+    <ul>
+      <li>conversão de datas com ano de 2 dígitos, corrigindo o século dos nascimentos que ficaram posteriores ao óbito (21.473 casos), validada pela idade informada (99,98% de concordância, com tolerância de 1 ano);</li>
+      <li>substituição de idades fora de 0 a 110 por valor ausente (2 casos) e do código inválido <code>6</code> em local de ocorrência (24 casos);</li>
+      <li>preenchimento de nulos categóricos com “Não informado”;</li>
+      <li>criação de faixa etária, região, e uma <em>flag</em> para causas básicas entre X60 e X84 da CID-10 (58.492 linhas), usada para restringir as análises.</li>
+    </ul>
+<pre><code>def tratar_datas(df, rel):
+    obito = pd.to_datetime(df["data_obito"], format="%d-%m-%y", errors="coerce")
+    nasc = pd.to_datetime(df["data_nascimento"], format="%d-%m-%y", errors="coerce")
+    posterior = nasc &gt; obito                      # ano de 2 dígitos é ambíguo
+    nasc = nasc.mask(posterior, nasc - pd.DateOffset(years=100))
+    rel["nascimentos_corrigidos_seculo"] = int(posterior.sum())
+    ...</code></pre>
+    <p>O código completo está em <code>src/etl.py</code> e o dicionário de variáveis em <code>data/data_dictionary.md</code>.</p>
+    <h3>2.3 Qualidade dos dados</h3>
+    <p>Os campos com maior ausência de informação são assistência médica (30,3% de registros “Não informado”), escolaridade (23,0%) e ocupação (21,1%). Estado civil (7,4%), circunstância do óbito (3,4%), raça/cor (2,3%) e local de ocorrência (0,3%) têm pouca ausência, e sexo, 15 registros. Nas análises seguintes, os percentuais por categoria desconsideram os registros “Não informado”, e a parcela excluída é sempre indicada.</p>
+    <figure>
+      <div class="quadro img"><img src="assets/qualidade_nao_informado.png" alt="Gráfico de barras horizontais com o percentual de registros sem informação em cada campo, de assistência médica (maior) a sexo (menor)" loading="lazy"></div>
+      <figcaption><strong>Figura 1.</strong> Percentual de registros “Não informado” por campo. Fonte: SIM/DataSUS, via Kaggle; elaboração própria.</figcaption>
+    </figure>
+  </section>
+
+  <section id="resultados">
+    <h2>3. Resultados e discussão</h2>
+    <p>Todas as análises usam os 58.492 óbitos com causa básica entre X60 e X84. Os números descrevem contagens: sem a população de referência, não permitem afirmar que um grupo ou local tenha maior risco.</p>
+
+    <h3>3.1 RQ1: evolução por ano, região e UF</h3>
+    <figure>
+      <div class="quadro"><div id="grafico-anual" role="img" aria-label="Gráfico de barras com o número de óbitos por ano, de 2014 a 2018"></div></div>
+      <figcaption><strong>Figura 2.</strong> Óbitos por lesão autoprovocada (CID-10 X60–X84) por ano. Fonte: SIM/DataSUS, via Kaggle; elaboração própria.</figcaption>
+    </figure>
+    <p>Os óbitos cresceram em todos os anos do período, de 10.653 em 2014 para 12.733 em 2018, um aumento de 19,5%. A maior variação anual ocorreu entre 2016 e 2017 (+9,3%); nos demais intervalos, o crescimento ficou entre 1,9% e 4,9%.</p>
+    <p>Esse aumento não pode ser lido, por si só, como crescimento do risco: a população também cresceu, e a base traz apenas contagens. Parte da alta pode refletir melhora na cobertura e na qualidade do registro, hipótese que estes dados não permitem separar de um aumento real. Avaliar a tendência do risco exige taxas por 100 mil habitantes, o que fica como trabalho futuro.</p>
+    <figure>
+      <div class="quadro"><iframe src="assets/fig_regiao_ano.html" title="Gráfico interativo de óbitos por ano e região" loading="lazy"></iframe></div>
+      <figcaption><strong>Figura 3.</strong> Óbitos por ano e região (gráfico interativo; passe o cursor para ver os valores). Fonte: SIM/DataSUS, via Kaggle; elaboração própria.</figcaption>
+    </figure>
+    <p>O Sudeste concentra 37,9% dos óbitos, seguido por Nordeste (23,3%), Sul (22,5%), Centro-Oeste (8,9%) e Norte (7,4%), ordem que acompanha, em boa medida, o tamanho populacional das regiões . Em termos relativos, o Norte teve o maior crescimento entre 2014 e 2018 (+40,0%, de 708 para 991 óbitos) e o Sudeste o menor (+9,2%); Nordeste, Sul e Centro-Oeste ficaram entre 24% e 25%.</p>
+    <figure>
+      <div class="quadro img"><img src="assets/fig_uf_ano_heatmap.png" alt="Mapa de calor com o número de óbitos por UF e ano, com UFs ordenadas do maior para o menor total" loading="lazy"></div>
+      <figcaption><strong>Figura 4.</strong> Óbitos por UF e ano, ordenados pelo total do período. Fonte: SIM/DataSUS, via Kaggle; elaboração própria.</figcaption>
+    </figure>
+    <p>Entre as UFs, São Paulo (11.244 óbitos), Minas Gerais (7.007) e Rio Grande do Sul (6.011) têm as maiores contagens, e as três somam 41,5% do total; só São Paulo responde por 19,2%. Esses valores refletem em parte o tamanho da população e não indicam, por si só, risco maior nesses estados. Nas variações relativas entre 2014 e 2018 destacam-se Roraima (+146,7%), Amapá (+82,4%) e Pará (+68,3%), mas partindo de bases pequenas (15 óbitos em Roraima e 34 no Amapá em 2014), o que torna as variações percentuais instáveis. São Paulo foi a única UF com redução (−1,1%).</p>
+
+    <h3>3.2 RQ2: perfil dos óbitos</h3>
+    <figure>
+      <div class="quadro img"><img src="assets/fig_faixa_etaria_sexo.png" alt="À esquerda, barras de óbitos por faixa etária e sexo; à direita, histograma da idade em faixas de 5 anos empilhado por sexo" loading="lazy"></div>
+      <figcaption><strong>Figura 5.</strong> Óbitos por faixa etária e sexo (esquerda) e distribuição da idade (direita). Fonte: SIM/DataSUS, via Kaggle; elaboração própria.</figcaption>
+    </figure>
+    <p>Homens somam 78,8% dos óbitos com sexo informado (46.077 contra 12.400 mulheres), ou 3,7 homens para cada mulher, razão estável ao longo do período (entre 3,66 e 3,81). Entre 2014 e 2018 o número de mulheres cresceu mais que o de homens (+22,2% contra +18,8%), mas a composição por sexo mudou pouco (de 79,0% para 78,6% de homens).</p>
+    <p>A razão entre sexos varia com a idade: é a menor entre 10 e 14 anos (1,15 homem por mulher) e a maior a partir dos 70 anos (4,59 entre 70 e 79 e 5,62 acima de 80). A idade mediana é de 40 anos (41 entre as mulheres e 40 entre os homens). Pessoas de 20 a 49 anos correspondem a cerca de 59% dos registros, e as de 10 a 29 anos a 26,7%. Os registros de 0 a 9 anos são pouquíssimos (menos de 0,1%) e merecem verificação quanto a erros de preenchimento.</p>
+    <figure>
+      <div class="quadro img"><img src="assets/fig_perfil_sociodemografico.png" alt="Três gráficos de barras horizontais com a distribuição percentual por escolaridade, raça/cor e estado civil" loading="lazy"></div>
+      <figcaption><strong>Figura 6.</strong> Distribuição percentual por escolaridade, raça/cor e estado civil, entre os registros informados. Fonte: SIM/DataSUS, via Kaggle; elaboração própria.</figcaption>
+    </figure>
+    <p>Entre os registros com escolaridade informada (77,0% do total), 64,1% têm de 4 a 11 anos de estudo, 17,8% de 1 a 3 anos, 12,2% têm 12 anos ou mais e 5,9% nenhuma escolaridade. Quanto à raça/cor (97,7% informados), 51,0% são brancas e 42,2% pardas, seguidas de pretas (5,3%), indígenas (1,1%) e amarelas (0,4%). Solteiros representam 54,1% dos registros com estado civil informado, e casados 28,4%.</p>
+    <p>Esses percentuais descrevem a composição dos óbitos, não o risco de cada grupo. Sem a distribuição dessas características na população geral, não é possível afirmar que algum grupo tenha maior ou menor risco: a participação de brancas e pardas, por exemplo, reflete também a composição racial do país. Escolaridade e estado civil, além disso, estão fortemente associados à idade, o que pede padronização por idade em análises futuras.</p>
+
+    <h3>3.3 RQ3: sazonalidade, local de ocorrência e meio utilizado</h3>
+    <figure>
+      <div class="quadro img"><img src="assets/fig_sazonalidade.png" alt="À esquerda, linhas de óbitos por dia em cada mês para cada ano; à direita, barras do índice sazonal por mês" loading="lazy"></div>
+      <figcaption><strong>Figura 7.</strong> Óbitos por dia, por mês e ano (esquerda) e índice sazonal, em que 1,00 é a média diária do período (direita). Fonte: SIM/DataSUS, via Kaggle; elaboração própria.</figcaption>
+    </figure>
+    <p>A distribuição mensal não é uniforme, mesmo descontando o número de dias de cada mês (χ² = 143,6; 11 graus de liberdade; p &lt; 0,001). O índice sazonal indica média diária 7% acima da média do período em dezembro (1,07) e 9% abaixo em julho (0,91). De setembro a março o índice fica acima de 1,00, e de abril a agosto, abaixo. Esse padrão, com valores mais altos na primavera e no verão e mais baixos no outono e no inverno do hemisfério sul.</p>
+    <p>O tamanho do desvio é modesto: a amplitude entre os índices de maior e de menor valor é de cerca de 16 pontos percentuais. Com mais de 58 mil registros, o teste detecta diferenças pequenas, então a significância estatística não deve ser lida como diferença grande. O padrão também aparece de forma irregular entre os anos (painel da esquerda), e o período de cinco anos é curto para afirmar regularidade.</p>
+    <figure>
+      <div class="quadro img"><img src="assets/fig_local_ocorrencia.png" alt="Gráfico de barras horizontais com o percentual de óbitos por local de ocorrência, com o domicílio em primeiro lugar" loading="lazy"></div>
+      <figcaption><strong>Figura 8.</strong> Local de ocorrência do óbito, entre os registros informados. Fonte: SIM/DataSUS, via Kaggle; elaboração própria.</figcaption>
+    </figure>
+    <p>Entre os registros com local informado (99,7%), 61,8% ocorreram no domicílio, 14,6% em hospitais, 6,1% em via pública e 1,6% em outros estabelecimentos de saúde; 15,9% foram classificados como “Outros”. Entre as pessoas com informação sobre assistência médica (69,7% do total), 79,9% não tiveram assistência. Esse dado exige cautela: o campo tem 30,3% de ausência e não distingue falta de acesso de falta de tempo hábil para atendimento.</p>
+    <figure>
+      <div class="quadro img"><img src="assets/fig_meio_por_sexo.png" alt="Barras horizontais empilhadas com a distribuição percentual dos grupos de meio utilizado, para homens e mulheres" loading="lazy"></div>
+      <figcaption><strong>Figura 9.</strong> Distribuição dos grupos de meio (CID-10) por sexo. Fonte: SIM/DataSUS, via Kaggle; elaboração própria.</figcaption>
+    </figure>
+    <p>Em ambos os sexos predomina o grupo enforcamento/sufocação (72,0% entre os homens e 56,5% entre as mulheres). Entre as mulheres, intoxicação/envenenamento (22,6% contra 8,4%) e precipitação de lugar elevado (6,5% contra 3,3%) são mais frequentes, enquanto as armas de fogo aparecem mais entre os homens (9,3% contra 3,9%). Diferenças na distribuição dos meios são relevantes para a prevenção, por exemplo em estratégias de restrição de acesso a meios . Por se tratar de tema sensível, este artigo apresenta apenas grupos amplos da CID-10.</p>
+  </section>
+
+  <section id="conclusao">
+    <h2>4. Conclusão</h2>
+    <p><strong>RQ1.</strong> Os óbitos por lesão autoprovocada cresceram 19,5% entre 2014 e 2018, com maior aumento relativo no Norte (+40,0%) e menor no Sudeste (+9,2%). As maiores contagens estão em São Paulo, Minas Gerais e Rio Grande do Sul, o que reflete em parte o tamanho de suas populações; sem taxas, o aumento observado não distingue crescimento de risco, de população e de melhoria do registro.</p>
+    <p><strong>RQ2.</strong> Os óbitos são predominantemente masculinos (78,8%, ou 3,7 homens por mulher, razão estável no período) e se concentram entre 20 e 49 anos (cerca de 59%), com idade mediana de 40 anos. A composição por escolaridade, raça/cor e estado civil foi descrita, mas não permite inferir risco por grupo sem dados populacionais.</p>
+    <p><strong>RQ3.</strong> Há sazonalidade estatisticamente detectável, com índices entre 0,91 (julho) e 1,07 (dezembro), porém de magnitude modesta. A maioria das ocorrências se dá no domicílio (61,8%), e a distribuição dos meios difere por sexo, o que interessa a ações de prevenção.</p>
+    <h3>Limitações</h3>
+    <ul>
+      <li>A base tem contagens, não taxas; comparações entre locais e grupos exigem dados populacionais externos.</li>
+      <li>Registros de mortalidade estão sujeitos a subnotificação e a erros de classificação da causa.</li>
+      <li>Campos como assistência médica (30,3%), escolaridade (23,0%) e ocupação (21,1%) têm muitos valores não informados.</li>
+      <li>A análise é descritiva e não permite inferência causal.</li>
+    </ul>
+    <h3>Trabalhos futuros</h3>
+    <p>Incorporar as estimativas populacionais do IBGE para calcular taxas por 100 mil habitantes, com padronização por idade; analisar os dados por município; e estender a série para anos posteriores a 2018.</p>
+  </section>
+
+  <section id="fair">
+    <h2>5. Disponibilidade dos dados e declaração FAIR</h2>
+    <div class="tabela">
+      <table>
+        <thead><tr><th>Princípio</th><th>Como é atendido</th></tr></thead>
+        <tbody>
+          <tr><td>Findable</td><td>README com resumo, palavras-chave e link para a fonte original; autoria e disciplina identificadas.</td></tr>
+          <tr><td>Accessible</td><td>Repositório público no GitHub e artigo no GitHub Pages, sem credenciais.</td></tr>
+          <tr><td>Interoperable</td><td>Dicionário de dados em <code>data/data_dictionary.md</code>; dados tratados em Parquet e CSV comprimido.</td></tr>
+          <tr><td>Reusable</td><td>Código sob licença MIT; dados e texto sob CC-BY 4.0; dependências fixadas em <code>requirements.txt</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Para reproduzir o pipeline completo:</p>
+<pre><code>git clone https://github.com/[USUARIO]/[REPOSITORIO].git
+cd [REPOSITORIO]
+python -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -r requirements.txt
+python -m src.etl</code></pre>
+  </section>
+
+  <section id="referencias" class="referencias">
+    <h2>6. Referências</h2>
+    <p>BRASIL. Ministério da Saúde. <strong>Sistema de Informações sobre Mortalidade (SIM)</strong>. DataSUS. Disponível em: https://datasus.saude.gov.br. Acesso em: <span class="pendente">[data]</span>.</p>
+    <p>PSICODATA. <strong>Dados de suicídio no Brasil, 2014 a 2018</strong>. Kaggle. Disponível em: https://www.kaggle.com/datasets/psicodata/dados-de-suicdio-no-brasil-2014-a-2018. Acesso em: <span class="pendente">[data]</span>.</p>
+    <p>MCKINNEY, W. Data structures for statistical computing in Python. In: PYTHON IN SCIENCE CONFERENCE, 9., 2010. <strong>Proceedings</strong> [...]. 2010. p. 56-61.</p>
+    <p>ORGANIZAÇÃO MUNDIAL DA SAÚDE. <strong>CID-10</strong>: Classificação Estatística Internacional de Doenças e Problemas Relacionados à Saúde. 10. rev. <span class="pendente">[local, editora, ano]</span>.</p>
+    <p>WILKINSON, M. D. et al. The FAIR Guiding Principles for scientific data management and stewardship. <strong>Scientific Data</strong>, v. 3, 160018, 2016.</p>
+    <p></p>
+  </section>
+
+  <p class="aviso">Os dados tratam de mortes e devem ser lidos com respeito. Se você ou alguém próximo precisa de apoio, o Centro de Valorização da Vida (CVV) atende gratuitamente, 24 horas, pelo telefone 188 e em <a href="https://cvv.org.br">cvv.org.br</a>.</p>
+</main>
+
+<footer>Texto e figuras sob licença CC-BY 4.0. Código sob licença MIT. </footer>
+</div>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+<script>
+(function () {
+  var dados = {"anos": [2014, 2015, 2016, 2017, 2018], "obitos": [10653, 11178, 11433, 12495, 12733]};
+  var el = document.getElementById("grafico-anual");
+  if (!el) return;
+  if (typeof Plotly === "undefined") {   // sem acesso ao CDN: mostra a versão estática
+    el.innerHTML = '<img src="assets/fig1_obitos_por_ano.png" alt="Gráfico de barras com o número de óbitos por ano, de 2014 a 2018" style="width:100%;height:auto;background:#fff">';
+    return;
+  }
+  function cor(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  function desenhar() {
+    Plotly.react(el, [{
+      type: "bar", x: dados.anos.map(String), y: dados.obitos,
+      marker: { color: cor("--accent") },
+      hovertemplate: "%{x}: %{y:,} óbitos<extra></extra>"
+    }], {
+      margin: { t: 10, r: 10, b: 40, l: 60 },
+      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
+      font: { family: cor("--sans"), color: cor("--ink") },
+      xaxis: { title: "Ano", type: "category", gridcolor: cor("--rule") },
+      yaxis: { title: "Óbitos", gridcolor: cor("--rule"), rangemode: "tozero", separatethousands: true }
+    }, { responsive: true, displaylogo: false });
+  }
+  desenhar();
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", desenhar);
+})();
+</script>
+</body>
+</html>
