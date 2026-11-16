@@ -5,12 +5,12 @@
 ![Licença dos dados e texto](https://img.shields.io/badge/dados%20e%20texto-CC--BY%204.0-lightgrey)
 ![FAIR](https://img.shields.io/badge/FAIR-compliant-informational)
 
-**Autores:** [NOME 1], [NOME 2], [NOME 3]
-**Instituição:** [INSTITUIÇÃO] · Bacharelado em Sistemas de Informação, 6º período
-**Disciplina:** Linguagem de Programação (Análise e Visualização de Dados com Python) · [SEMESTRE/ANO]
-**Docente:** [NOME DO PROFESSOR]
+**Autores:** Leandro Parreira Novarino
+**Instituição:** UNILASALLE-niteroi · Bacharelado em Sistemas de Informação, 6º período
+**Disciplina:** Linguagem de Programação (Análise e Visualização de Dados com Python) · 6º semestre do ano de 2026
+**Docente:** Alexandre Neves Louzada
 
-**Artigo publicado:** https://[USUARIO].github.io/[REPOSITORIO]/
+**Artigo publicado:** https://github.com/olinov1991/Projeto-Pr-tico-G2
 
 ## Resumo executivo
 
@@ -24,10 +24,9 @@ análise de dados; saúde pública; mortalidade; DataSUS; Python; ciência abert
 
 ## Perguntas de pesquisa
 
-- **RQ1:** [TODO, ex.: Como evoluíram os óbitos por ano e por região/UF no período?]
-- **RQ2:** [TODO, ex.: Qual o perfil por sexo, faixa etária e escolaridade?]
-- **RQ3:** [TODO, ex.: Há padrão sazonal (mês) ou por local de ocorrência?]
-
+- **RQ1:** Como evoluíram os óbitos por ano e por região/UF no período?
+- **RQ2:** Qual o perfil por sexo, faixa etária e escolaridade?
+- **RQ3:** Há padrão sazonal (mês) ou por local de ocorrência?
 ## Fonte dos dados
 
 - Kaggle, *Dados de suicídio no Brasil, 2014 a 2018* (psicodata): https://www.kaggle.com/datasets/psicodata/dados-de-suicdio-no-brasil-2014-a-2018
@@ -62,8 +61,8 @@ análise de dados; saúde pública; mortalidade; DataSUS; Python; ciência abert
 Requer Python 3.12.
 
 ```bash
-git clone https://github.com/[USUARIO]/[REPOSITORIO].git
-cd [REPOSITORIO]
+git clone https://github.com/olinov1991/Projeto-Pr-tico-G2.git
+cd Projeto-Pr-tico-G2
 
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
@@ -84,12 +83,9 @@ Em **Settings → Pages**, escolha *Deploy from a branch*, branch `main` e pasta
 
 ## Licenças
 
-- **Código** (`src/`, notebooks): MIT, ver [`LICENSE`](LICENSE).
+- **Código** (`src/`, notebooks): MIT.
 - **Texto, figuras e dados tratados:** CC-BY 4.0 (https://creativecommons.org/licenses/by/4.0/), respeitada a licença da fonte original.
 
-## Como citar
-
-[SOBRENOME, Nome et al.]. *Análise de óbitos por lesão autoprovocada no Brasil (2014–2018)*. [Instituição], [ano]. Disponível em: https://github.com/[USUARIO]/[REPOSITORIO].
 
 ## Nota sobre o tema
 
